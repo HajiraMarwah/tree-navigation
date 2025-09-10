@@ -1,36 +1,30 @@
 import React, { useState, useCallback } from "react";
+import "./FolderTree.css"; // Import CSS
 
 function FolderTree({ data }) {
   const [expanded, setExpanded] = useState({});
   const [checked, setChecked] = useState({});
 
-  // Toggle expand/collapse for a folder
   const handleToggle = useCallback((id) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
-  // Recursive function to get all children IDs
   const getAllChildIds = useCallback((node) => {
     if (!node.children) return [node.id];
     return [node.id, ...node.children.flatMap(getAllChildIds)];
   }, []);
 
-  // Update parent checkbox state based on children
-  const updateParentChecks = useCallback(
-    (node, updatedChecked) => {
-      if (!node) return updatedChecked;
-      if (node.children) {
-        const allChecked = node.children.every(
-          (child) => updatedChecked[child.id]
-        );
-        updatedChecked[node.id] = allChecked;
-      }
-      return updatedChecked;
-    },
-    []
-  );
+  const updateParentChecks = useCallback((node, updatedChecked) => {
+    if (!node) return updatedChecked;
+    if (node.children) {
+      const allChecked = node.children.every(
+        (child) => updatedChecked[child.id]
+      );
+      updatedChecked[node.id] = allChecked;
+    }
+    return updatedChecked;
+  }, []);
 
-  // Handle checkbox change
   const handleCheck = useCallback(
     (node, isChecked) => {
       let updatedChecked = { ...checked };
@@ -39,7 +33,6 @@ function FolderTree({ data }) {
         updatedChecked[id] = isChecked;
       });
 
-      // Update parents recursively
       const updateParentsRecursive = (targetNode, currentData) => {
         const findParent = (nodes, childId) => {
           for (let n of nodes) {
@@ -62,23 +55,13 @@ function FolderTree({ data }) {
     [checked, data, getAllChildIds, updateParentChecks]
   );
 
-  // Recursive renderer
   const renderNode = (node) => (
-    <div
-      key={node.id}
-      data-testid={`node-${node.id}`}
-      style={{ paddingLeft: "20px" }}
-    >
+    <div key={node.id} data-testid={`node-${node.id}`} className="node">
       {node.children && (
         <button
           data-testid={`toggle-${node.id}`}
           onClick={() => handleToggle(node.id)}
-          style={{
-            marginRight: "5px",
-            cursor: "pointer",
-            background: "transparent",
-            border: "none",
-          }}
+          className="toggle-btn"
         >
           {expanded[node.id] ? "▼" : "▶"}
         </button>
@@ -89,16 +72,16 @@ function FolderTree({ data }) {
         checked={!!checked[node.id]}
         onChange={(e) => handleCheck(node, e.target.checked)}
       />
-      {node.name}
+      <span className="node-label">{node.name}</span>
       {node.children && expanded[node.id] && (
-        <div>{node.children.map(renderNode)}</div>
+        <div className="children">{node.children.map(renderNode)}</div>
       )}
     </div>
   );
 
   return (
-    <div data-testid="tree-container">
-      <h3>Folder Navigation</h3>
+    <div className="tree-container" data-testid="tree-container">
+      <h3 className="title">Folder Navigation</h3>
       {data.map(renderNode)}
     </div>
   );
